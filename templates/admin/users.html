@@ -1,0 +1,280 @@
+{% extends "base.html" %}
+
+{% block title %}Admin - Users{% endblock %}
+
+{% block content %}
+<div class="admin-header">
+    <h1><i class="fas fa-users"></i> Daftar Users</h1>
+    <p>Kelola semua pengguna sistem</p>
+</div>
+
+<div class="admin-nav">
+    <a href="{{ url_for('admin_dashboard') }}" class="admin-nav-link">
+        <i class="fas fa-chart-line"></i> Overview
+    </a>
+    <a href="{{ url_for('admin_users') }}" class="admin-nav-link active">
+        <i class="fas fa-users"></i> Users
+    </a>
+    <a href="{{ url_for('admin_history') }}" class="admin-nav-link">
+        <i class="fas fa-history"></i> All History
+    </a>
+</div>
+
+<div class="users-table-container">
+    <div class="table-header">
+        <h3>Total: {{ users.total }} users</h3>
+    </div>
+
+    {% if users.items %}
+    <div class="users-list">
+        {% for user in users.items %}
+        <div class="user-card">
+            <div class="user-avatar-section">
+                <div class="user-avatar">
+                    <i class="fas fa-user-circle"></i>
+                </div>
+                {% if user.is_admin %}
+                <span class="admin-badge">
+                    <i class="fas fa-shield-alt"></i> Admin
+                </span>
+                {% endif %}
+            </div>
+            
+            <div class="user-details">
+                <h3>{{ user.full_name or user.username }}</h3>
+                <p class="user-username">@{{ user.username }}</p>
+                <p class="user-email">{{ user.email }}</p>
+                <p class="user-joined">
+                    <i class="fas fa-calendar"></i> 
+                    Bergabung: {{ user.created_at.strftime('%d %B %Y') if user.created_at else 'N/A' }}
+                </p>
+            </div>
+            
+            <div class="user-stats">
+                <div class="stat-box">
+                    <i class="fas fa-camera"></i>
+                    <div>
+                        <h4>{{ user.detections|length }}</h4>
+                        <p>Deteksi</p>
+                    </div>
+                </div>
+                <div class="stat-box">
+                    <i class="fas fa-leaf"></i>
+                    <div>
+                        <h4>{{ user.detections|selectattr('predicted_class', 'equalto', 'Organik')|list|length }}</h4>
+                        <p>Organik</p>
+                    </div>
+                </div>
+                <div class="stat-box">
+                    <i class="fas fa-recycle"></i>
+                    <div>
+                        <h4>{{ user.detections|selectattr('predicted_class', 'equalto', 'Non-Organik')|list|length }}</h4>
+                        <p>Non-Organik</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <div class="pagination">
+        {% if users.has_prev %}
+        <a href="{{ url_for('admin_users', page=users.prev_num) }}" class="btn btn-secondary">
+            <i class="fas fa-chevron-left"></i> Sebelumnya
+        </a>
+        {% endif %}
+        
+        <span class="page-info">
+            Halaman {{ users.page }} dari {{ users.pages }}
+        </span>
+        
+        {% if users.has_next %}
+        <a href="{{ url_for('admin_users', page=users.next_num) }}" class="btn btn-secondary">
+            Selanjutnya <i class="fas fa-chevron-right"></i>
+        </a>
+        {% endif %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <i class="fas fa-inbox"></i>
+        <p>Belum ada user</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.admin-header {
+    margin-bottom: 2rem;
+}
+
+.admin-nav {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+}
+
+.admin-nav-link {
+    padding: 0.75rem 1.5rem;
+    background: var(--surface-card);
+    border: 2px solid var(--border-subtle);
+    border-radius: 10px;
+    text-decoration: none;
+    color: var(--text-primary);
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.admin-nav-link:hover {
+    background: var(--primary-light);
+    color: white;
+    border-color: var(--primary-light);
+}
+
+.admin-nav-link.active {
+    background: var(--primary-main);
+    color: white;
+    border-color: var(--primary-main);
+}
+
+.users-table-container {
+    background: var(--surface-card);
+    padding: 2rem;
+    border-radius: 15px;
+    box-shadow: 0 5px 20px var(--shadow);
+    border: 1px solid var(--border-subtle);
+}
+
+.table-header {
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid var(--border-subtle);
+}
+
+.table-header h3 {
+    color: var(--text-primary);
+}
+
+.users-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.user-card {
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+    padding: 1.5rem;
+    background: var(--bg-main);
+    border-radius: 15px;
+    border: 1px solid var(--border-subtle);
+    transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.user-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 5px 15px var(--shadow);
+}
+
+.user-avatar-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.user-avatar {
+    font-size: 4rem;
+    color: var(--primary-main);
+}
+
+.admin-badge {
+    background: var(--accent-orange);
+    color: white;
+    padding: 0.25rem 0.75rem;
+    border-radius: 15px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.user-details {
+    flex: 1;
+}
+
+.user-details h3 {
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+}
+
+.user-username {
+    color: var(--primary-main);
+    font-weight: 500;
+    margin-bottom: 0.25rem;
+}
+
+.user-email {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    margin-bottom: 0.5rem;
+}
+
+.user-joined {
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.user-stats {
+    display: flex;
+    gap: 1.5rem;
+}
+
+.stat-box {
+    text-align: center;
+    padding: 1rem;
+    background: var(--surface-card);
+    border-radius: 10px;
+    min-width: 80px;
+    border: 1px solid var(--border-subtle);
+}
+
+.stat-box i {
+    font-size: 1.5rem;
+    color: var(--primary-main);
+    margin-bottom: 0.5rem;
+}
+
+.stat-box h4 {
+    color: var(--text-primary);
+    font-size: 1.5rem;
+    margin-bottom: 0.25rem;
+}
+
+.stat-box p {
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+}
+
+@media (max-width: 768px) {
+    .user-card {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .user-stats {
+        justify-content: center;
+    }
+}
+</style>
+{% endblock %}
+

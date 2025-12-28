@@ -1,0 +1,248 @@
+{% extends "base.html" %}
+
+{% block title %}Deteksi Sampah{% endblock %}
+
+{% block content %}
+<div class="detect-header">
+    <h1><i class="fas fa-camera"></i> Deteksi Sampah</h1>
+    <p>Upload gambar atau gunakan webcam untuk mendeteksi jenis sampah</p>
+</div>
+
+<div class="detect-container">
+    <div class="detect-tabs">
+        <button class="tab-btn active" onclick="switchTab('upload')">
+            <i class="fas fa-upload"></i> Upload Gambar
+        </button>
+        <button class="tab-btn" onclick="switchTab('webcam')">
+            <i class="fas fa-video"></i> Webcam
+        </button>
+        <button class="tab-btn" onclick="switchTab('video')">
+            <i class="fas fa-file-video"></i> Video File
+        </button>
+    </div>
+
+    <!-- Upload Tab -->
+    <div id="upload-tab" class="tab-content active">
+        <div class="upload-section">
+            <div class="upload-box" id="uploadBox">
+                <div class="upload-icon">
+                    <i class="fas fa-cloud-upload-alt"></i>
+                </div>
+                <h3>Upload Gambar Sampah</h3>
+                <p>Klik atau drag & drop gambar di sini</p>
+                <input type="file" id="fileInput" accept="image/*" hidden>
+                <button type="button" class="btn btn-primary" id="selectImageBtn">
+                    <i class="fas fa-folder-open"></i> Pilih Gambar
+                </button>
+            </div>
+
+            <div class="preview-section" id="previewSection" style="display: none;">
+                <div class="preview-image-container">
+                    <img id="previewImage" src="" alt="Preview">
+                    <button class="btn-remove" onclick="removeImage()">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                {% if yolo_available %}
+                <div class="yolo-option">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="useYOLO" checked>
+                        <span><i class="fas fa-bounding-box"></i> Gunakan YOLO untuk Bounding Box</span>
+                    </label>
+                </div>
+                {% endif %}
+                <button class="btn btn-success btn-large" onclick="predictImage()">
+                    <i class="fas fa-search"></i> Deteksi Sampah
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Webcam Tab -->
+    <div id="webcam-tab" class="tab-content">
+        <div class="webcam-section">
+            <div class="webcam-container">
+                <video id="webcam" autoplay playsinline></video>
+                <canvas id="canvas" style="display: none;"></canvas>
+            </div>
+            {% if yolo_available %}
+            <div class="yolo-option">
+                <label class="checkbox-label">
+                    <input type="checkbox" id="useYOLOWebcam" checked>
+                    <span><i class="fas fa-bounding-box"></i> Gunakan YOLO untuk Bounding Box</span>
+                </label>
+            </div>
+            {% endif %}
+            <div class="webcam-controls">
+                <button class="btn btn-primary" id="startWebcam" onclick="startWebcam()">
+                    <i class="fas fa-video"></i> Aktifkan Webcam
+                </button>
+                <button class="btn btn-success" id="captureBtn" onclick="captureImage()" style="display: none;">
+                    <i class="fas fa-camera"></i> Ambil Foto
+                </button>
+                <button class="btn btn-danger" id="stopWebcam" onclick="stopWebcam()" style="display: none;">
+                    <i class="fas fa-stop"></i> Stop Webcam
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Video File Tab -->
+    <div id="video-tab" class="tab-content">
+        <div class="video-section">
+            <div class="upload-box" id="videoUploadBox">
+                <div class="upload-icon">
+                    <i class="fas fa-file-video"></i>
+                </div>
+                <h3>Upload Video Sampah</h3>
+                <p>Klik atau drag & drop video di sini</p>
+                <input type="file" id="videoInput" accept="video/*" hidden>
+                <button type="button" class="btn btn-primary" id="selectVideoBtn">
+                    <i class="fas fa-folder-open"></i> Pilih Video
+                </button>
+                <p class="video-info">Format: MP4, AVI, MOV, MKV, WEBM</p>
+            </div>
+
+            <div class="video-preview-section" id="videoPreviewSection" style="display: none;">
+                <div class="video-info-display">
+                    <p><strong>File:</strong> <span id="videoFileName"></span></p>
+                    <p><strong>Ukuran:</strong> <span id="videoFileSize"></span></p>
+                </div>
+                <button class="btn btn-success btn-large" onclick="processVideo()">
+                    <i class="fas fa-play"></i> Proses Video
+                </button>
+                <button class="btn btn-secondary" onclick="removeVideo()">
+                    <i class="fas fa-times"></i> Batal
+                </button>
+            </div>
+
+            <div class="video-result-section" id="videoResultSection" style="display: none;">
+                <h3><i class="fas fa-check-circle"></i> Video Selesai Diproses!</h3>
+                <div class="video-summary" id="videoSummary"></div>
+                <div class="video-player-container" style="display: block; visibility: visible;">
+                    <video id="resultVideo" 
+                           controls 
+                           preload="metadata"
+                           style="width: 100%; max-width: 100%; border-radius: 10px; margin-top: 1rem; display: block; background: #000; min-height: 300px;">
+                        Browser Anda tidak mendukung video tag.
+                    </video>
+                </div>
+                <div class="video-actions">
+                    <a id="downloadVideo" class="btn btn-primary" download>
+                        <i class="fas fa-download"></i> Download Video
+                    </a>
+                    <button class="btn btn-secondary" onclick="resetVideo()">
+                        <i class="fas fa-redo"></i> Proses Video Lain
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Result Section -->
+    <div class="result-section" id="resultSection" style="display: none;">
+        <div class="result-card">
+            <div class="result-icon" id="resultIcon"></div>
+            <h2 id="resultClass"></h2>
+            
+            <!-- Summary Multiple Detections -->
+            <div class="detection-summary" id="detectionSummary" style="display: none;">
+                <h3><i class="fas fa-list"></i> Ringkasan Deteksi</h3>
+                <div class="summary-stats">
+                    <div class="summary-item">
+                        <i class="fas fa-cube"></i>
+                        <span>Total Objek: <strong id="totalObjects">0</strong></span>
+                    </div>
+                    <div class="summary-item organic">
+                        <i class="fas fa-leaf"></i>
+                        <span>Organik: <strong id="organicCount">0</strong></span>
+                    </div>
+                    <div class="summary-item non-organic">
+                        <i class="fas fa-recycle"></i>
+                        <span>Non-Organik: <strong id="nonOrganicCount">0</strong></span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Multiple Detections List -->
+            <div class="multiple-detections" id="multipleDetections" style="display: none;">
+                <h3><i class="fas fa-bounding-box"></i> Detail Deteksi (YOLO)</h3>
+                <div class="detections-list" id="detectionsList"></div>
+            </div>
+            
+            <div class="confidence-bar">
+                <div class="confidence-fill" id="confidenceFill"></div>
+            </div>
+            <p class="confidence-text" id="confidenceText"></p>
+            <div class="result-details">
+                <p><i class="fas fa-clock"></i> Processing Time: <span id="processingTime"></span>s</p>
+            </div>
+            
+            <!-- Informasi Detail Sampah -->
+            <div class="waste-info-card" id="wasteInfoCard" style="display: none;">
+                <div class="waste-info-header">
+                    <h3><i class="fas fa-info-circle"></i> Informasi Detail</h3>
+                </div>
+                
+                <div class="waste-description">
+                    <p id="wasteDescription"></p>
+                </div>
+                
+                <div class="waste-examples">
+                    <h4><i class="fas fa-list"></i> Contoh:</h4>
+                    <ul id="wasteExamples"></ul>
+                </div>
+                
+                <div class="recycling-status" id="recyclingStatus">
+                    <h4><i class="fas fa-recycle"></i> Status Daur Ulang:</h4>
+                    <div class="recycling-badge" id="recyclingBadge"></div>
+                    <p id="recyclingInfo"></p>
+                </div>
+                
+                <div class="disposal-tips">
+                    <h4><i class="fas fa-lightbulb"></i> Tips Pembuangan:</h4>
+                    <ul id="disposalTips"></ul>
+                </div>
+                
+                <div class="waste-benefits">
+                    <h4><i class="fas fa-leaf"></i> Manfaat:</h4>
+                    <p id="wasteBenefits"></p>
+                </div>
+            </div>
+            
+            <!-- Bounding Box Image jika ada -->
+            <div id="bboxImageContainer" style="display: none; margin-top: 1.5rem;">
+                <h4><i class="fas fa-bounding-box"></i> Hasil dengan Bounding Box:</h4>
+                <img id="bboxImage" src="" alt="Bounding Box Result" style="max-width: 100%; border-radius: 10px; margin-top: 1rem;">
+            </div>
+            <button class="btn btn-primary" onclick="resetDetection()">
+                <i class="fas fa-redo"></i> Deteksi Lagi
+            </button>
+        </div>
+    </div>
+</div>
+
+<div class="info-section section-spacing">
+    <h3><i class="fas fa-info-circle"></i> Informasi</h3>
+    <div class="info-grid">
+        <div class="info-card organic">
+            <h4><i class="fas fa-leaf"></i> Organik</h4>
+            <p>Sampah yang dapat terurai secara alami, seperti sisa makanan, daun, dll.</p>
+        </div>
+        <div class="info-card non-organic">
+            <h4><i class="fas fa-recycle"></i> Non-Organik</h4>
+            <p>Sampah yang tidak dapat terurai, seperti plastik, kaca, logam, dll.</p>
+        </div>
+    </div>
+</div>
+
+<div class="loading-overlay" id="loading" style="display: none;">
+    <div class="spinner"></div>
+    <p>Memproses gambar...</p>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/detect.js') }}"></script>
+{% endblock %}
+

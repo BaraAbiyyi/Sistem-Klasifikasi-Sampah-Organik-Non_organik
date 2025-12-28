@@ -1,0 +1,571 @@
+{% extends "base.html" %}
+
+{% block title %}Admin - All History{% endblock %}
+
+{% block content %}
+<div class="admin-header">
+    <h1><i class="fas fa-history"></i> History Semua User</h1>
+    <p>Riwayat deteksi dari semua pengguna</p>
+</div>
+
+<div class="admin-nav">
+    <a href="{{ url_for('admin_dashboard') }}" class="admin-nav-link">
+        <i class="fas fa-chart-line"></i> Overview
+    </a>
+    <a href="{{ url_for('admin_users') }}" class="admin-nav-link">
+        <i class="fas fa-users"></i> Users
+    </a>
+    <a href="{{ url_for('admin_history') }}" class="admin-nav-link active">
+        <i class="fas fa-history"></i> All History
+    </a>
+</div>
+
+<div class="history-actions-bar">
+    <div class="history-filters">
+        <form method="GET" class="filter-form">
+            <div class="filter-group">
+                <label for="user_id"><i class="fas fa-user"></i> Filter by User:</label>
+                <select name="user_id" id="user_id" class="form-control">
+                    <option value="">Semua User</option>
+                    {% for user in all_users %}
+                    <option value="{{ user.id }}" {% if filter_user == user.id %}selected{% endif %}>
+                        {{ user.username }} ({{ user.full_name or 'No name' }})
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="filter-group">
+                <label for="class"><i class="fas fa-tag"></i> Filter by Class:</label>
+                <select name="class" id="class" class="form-control">
+                    <option value="">Semua</option>
+                    <option value="Organik" {% if filter_class == 'Organik' %}selected{% endif %}>Organik</option>
+                    <option value="Non-Organik" {% if filter_class == 'Non-Organik' %}selected{% endif %}>Non-Organik</option>
+                </select>
+            </div>
+            
+            <button type="submit" class="btn btn-primary">
+                <i class="fas fa-filter"></i> Filter
+            </button>
+            <a href="{{ url_for('admin_history') }}" class="btn btn-secondary">
+                <i class="fas fa-redo"></i> Reset
+            </a>
+        </form>
+    </div>
+    <div class="bulk-actions">
+        <button class="btn btn-secondary" id="selectAllBtn" onclick="toggleSelectAll()">
+            <i class="fas fa-check-square"></i> Pilih Semua
+        </button>
+        <button class="btn btn-danger" id="deleteSelectedBtn" onclick="deleteSelected()" style="display: none;">
+            <i class="fas fa-trash"></i> Hapus Terpilih
+        </button>
+    </div>
+</div>
+
+{% if detections.items %}
+<div class="history-list">
+    {% for detection in detections.items %}
+    <div class="history-item" data-id="{{ detection.id }}" onclick="window.location.href='{{ url_for('history_detail_page', detection_id=detection.id) }}'" style="cursor: pointer;">
+        <div class="history-checkbox" onclick="event.stopPropagation();">
+            <input type="checkbox" class="history-check" value="{{ detection.id }}" onchange="updateDeleteButton(); event.stopPropagation();">
+        </div>
+        <div class="history-icon">
+            {% if detection.predicted_class == 'Organik' %}
+                <i class="fas fa-leaf"></i>
+            {% else %}
+                <i class="fas fa-recycle"></i>
+            {% endif %}
+        </div>
+        <div class="history-content">
+            <h3>{{ detection.predicted_class }}</h3>
+            <div class="history-meta">
+                <span><i class="fas fa-user"></i> <strong>{{ detection.user.username }}</strong></span>
+                <span><i class="fas fa-calendar"></i> {{ detection.created_at.strftime('%d %B %Y') }}</span>
+                <span><i class="fas fa-clock"></i> {{ detection.created_at.strftime('%H:%M') }}</span>
+                {% if detection.image_size %}
+                <span><i class="fas fa-image"></i> {{ detection.image_size }}</span>
+                {% endif %}
+                {% if detection.processing_time %}
+                <span><i class="fas fa-stopwatch"></i> {{ detection.processing_time }}s</span>
+                {% endif %}
+            </div>
+        </div>
+        <div class="history-confidence">
+            <div class="confidence-badge confidence-{{ 'success' if detection.predicted_class == 'Organik' else 'warning' }}">
+                {{ detection.confidence }}%
+            </div>
+        </div>
+        {% if detection.image_path %}
+        <div class="history-image" onclick="event.stopPropagation();">
+            {% set is_video = detection.image_path and (detection.image_path.startswith('output_') or detection.image_path.lower().endswith(('.mp4', '.avi', '.mov', '.mkv', '.webm'))) %}
+            {% if is_video %}
+                <video src="{{ url_for('serve_video', filename=detection.image_path) }}" 
+                       alt="Video Detection" 
+                       onclick="showVideoModal(this.src)"
+                       style="width: 100px; height: 100px; object-fit: cover; border-radius: 10px; cursor: pointer;"
+                       preload="metadata">
+                </video>
+            {% else %}
+                <img src="{{ url_for('static', filename='uploads/' + detection.image_path) }}" 
+                     alt="Detection" 
+                     onclick="showImageModal(this.src)"
+                     style="width: 100px; height: 100px; object-fit: cover; border-radius: 10px; cursor: pointer;">
+            {% endif %}
+        </div>
+        {% endif %}
+        <div class="history-actions" onclick="event.stopPropagation();">
+            <button class="btn-delete-history" onclick="deleteHistory({{ detection.id }})" title="Hapus">
+                <i class="fas fa-trash"></i>
+            </button>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<div class="pagination">
+    {% if detections.has_prev %}
+    <a href="{{ url_for('admin_history', page=detections.prev_num, user_id=filter_user, class=filter_class) }}" class="btn btn-secondary">
+        <i class="fas fa-chevron-left"></i> Sebelumnya
+    </a>
+    {% endif %}
+    
+    <span class="page-info">
+        Halaman {{ detections.page }} dari {{ detections.pages }}
+    </span>
+    
+    {% if detections.has_next %}
+    <a href="{{ url_for('admin_history', page=detections.next_num, user_id=filter_user, class=filter_class) }}" class="btn btn-secondary">
+        Selanjutnya <i class="fas fa-chevron-right"></i>
+    </a>
+    {% endif %}
+</div>
+{% else %}
+<div class="empty-state">
+    <i class="fas fa-inbox"></i>
+    <p>Belum ada history deteksi</p>
+</div>
+{% endif %}
+
+<!-- Image Modal -->
+<div id="imageModal" class="modal" onclick="closeImageModal()">
+    <span class="modal-close">&times;</span>
+    <img class="modal-content" id="modalImage">
+</div>
+
+<!-- Video Modal -->
+<div id="videoModal" class="modal" onclick="closeVideoModal()">
+    <span class="modal-close">&times;</span>
+    <video class="modal-content" id="modalVideo" controls></video>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.admin-header {
+    margin-bottom: 2rem;
+}
+
+.admin-nav {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+}
+
+.admin-nav-link {
+    padding: 0.75rem 1.5rem;
+    background: var(--surface-card);
+    border: 2px solid var(--border-subtle);
+    border-radius: 10px;
+    text-decoration: none;
+    color: var(--text-primary);
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.admin-nav-link:hover {
+    background: var(--primary-light);
+    color: white;
+    border-color: var(--primary-light);
+}
+
+.admin-nav-link.active {
+    background: var(--primary-main);
+    color: white;
+    border-color: var(--primary-main);
+}
+
+.history-actions-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+}
+
+.history-filters {
+    background: var(--surface-card);
+    padding: 1.5rem;
+    border-radius: 15px;
+    box-shadow: 0 5px 20px var(--shadow);
+    border: 1px solid var(--border-subtle);
+    flex: 1;
+    min-width: 300px;
+}
+
+.filter-form {
+    display: flex;
+    gap: 1rem;
+    align-items: flex-end;
+    flex-wrap: wrap;
+}
+
+.bulk-actions {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    flex: 1;
+    min-width: 200px;
+}
+
+.filter-group label {
+    color: var(--text-primary);
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.history-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.history-item {
+    background: var(--surface-card);
+    padding: 1.5rem;
+    border-radius: 15px;
+    box-shadow: 0 5px 20px var(--shadow);
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    transition: transform 0.3s, box-shadow 0.3s;
+    border: 1px solid var(--border-subtle);
+    cursor: pointer;
+}
+
+.history-item:hover {
+    transform: translateX(5px);
+    box-shadow: 0 8px 25px var(--shadow);
+}
+
+.history-icon {
+    font-size: 2.5rem;
+    width: 70px;
+    height: 70px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg-main);
+    border-radius: 15px;
+}
+
+.history-content {
+    flex: 1;
+}
+
+.history-content h3 {
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+}
+
+.history-meta {
+    display: flex;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+.history-meta span {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.history-meta strong {
+    color: var(--primary-main);
+}
+
+.history-image {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.history-image img,
+.history-image video {
+    width: 100px;
+    height: 100px;
+    object-fit: cover;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: transform 0.3s;
+    background: var(--bg-main);
+}
+
+.history-image img:hover,
+.history-image video:hover {
+    transform: scale(1.1);
+}
+
+/* Modal styles */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 10000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.9);
+    cursor: pointer;
+}
+
+.modal-content {
+    margin: auto;
+    display: block;
+    max-width: 90%;
+    max-height: 90%;
+    margin-top: 5%;
+    border-radius: 10px;
+}
+
+.modal-close {
+    position: absolute;
+    top: 20px;
+    right: 35px;
+    color: #f1f1f1;
+    font-size: 40px;
+    font-weight: bold;
+    cursor: pointer;
+    z-index: 10001;
+}
+
+.modal-close:hover {
+    color: #fff;
+}
+
+#modalVideo {
+    width: 90%;
+    max-width: 1200px;
+    height: auto;
+    margin: 5% auto;
+    display: block;
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function showImageModal(src) {
+    const modal = document.getElementById('imageModal');
+    const modalImg = document.getElementById('modalImage');
+    modal.style.display = 'block';
+    modalImg.src = src;
+}
+
+function closeImageModal() {
+    const modal = document.getElementById('imageModal');
+    const modalImg = document.getElementById('modalImage');
+    modal.style.display = 'none';
+    modalImg.src = '';
+}
+
+function showVideoModal(src) {
+    const modal = document.getElementById('videoModal');
+    const modalVideo = document.getElementById('modalVideo');
+    modal.style.display = 'block';
+    modalVideo.src = src;
+    modalVideo.play();
+}
+
+function closeVideoModal() {
+    const modal = document.getElementById('videoModal');
+    const modalVideo = document.getElementById('modalVideo');
+    modal.style.display = 'none';
+    modalVideo.src = '';
+    modalVideo.pause();
+}
+
+// Delete single history
+async function deleteHistory(detectionId) {
+    if (!confirm('Apakah Anda yakin ingin menghapus history ini?')) {
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/history/delete/${detectionId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        const data = await response.json();
+        
+        if (data.error) {
+            alert('Error: ' + data.error);
+            return;
+        }
+        
+        // Hapus elemen dari DOM
+        const item = document.querySelector(`[data-id="${detectionId}"]`);
+        if (item) {
+            item.style.transition = 'opacity 0.3s';
+            item.style.opacity = '0';
+            setTimeout(() => {
+                item.remove();
+                // Reload jika tidak ada item lagi
+                if (document.querySelectorAll('.history-item').length === 0) {
+                    location.reload();
+                }
+            }, 300);
+        }
+        
+        // Show success message
+        showNotification('History berhasil dihapus', 'success');
+        
+    } catch (error) {
+        alert('Error: ' + error.message);
+        console.error('Error:', error);
+    }
+}
+
+// Toggle select all
+function toggleSelectAll() {
+    const checkboxes = document.querySelectorAll('.history-check');
+    const selectAllBtn = document.getElementById('selectAllBtn');
+    const allChecked = Array.from(checkboxes).every(cb => cb.checked);
+    
+    checkboxes.forEach(cb => {
+        cb.checked = !allChecked;
+    });
+    
+    selectAllBtn.innerHTML = allChecked 
+        ? '<i class="fas fa-check-square"></i> Pilih Semua'
+        : '<i class="fas fa-square"></i> Batal Pilih';
+    
+    updateDeleteButton();
+}
+
+// Update delete button visibility
+function updateDeleteButton() {
+    const checkboxes = document.querySelectorAll('.history-check:checked');
+    const deleteBtn = document.getElementById('deleteSelectedBtn');
+    
+    if (checkboxes.length > 0) {
+        deleteBtn.style.display = 'inline-flex';
+        deleteBtn.innerHTML = `<i class="fas fa-trash"></i> Hapus Terpilih (${checkboxes.length})`;
+    } else {
+        deleteBtn.style.display = 'none';
+    }
+}
+
+// Delete selected
+async function deleteSelected() {
+    const checkboxes = document.querySelectorAll('.history-check:checked');
+    const ids = Array.from(checkboxes).map(cb => parseInt(cb.value));
+    
+    if (ids.length === 0) {
+        alert('Pilih history yang ingin dihapus');
+        return;
+    }
+    
+    if (!confirm(`Apakah Anda yakin ingin menghapus ${ids.length} history yang dipilih?`)) {
+        return;
+    }
+    
+    try {
+        const response = await fetch('/history/delete-multiple', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ ids: ids })
+        });
+        
+        const data = await response.json();
+        
+        if (data.error) {
+            alert('Error: ' + data.error);
+            return;
+        }
+        
+        // Hapus elemen dari DOM
+        ids.forEach(id => {
+            const item = document.querySelector(`[data-id="${id}"]`);
+            if (item) {
+                item.style.transition = 'opacity 0.3s';
+                item.style.opacity = '0';
+                setTimeout(() => item.remove(), 300);
+            }
+        });
+        
+        // Reset select all button
+        document.getElementById('selectAllBtn').innerHTML = '<i class="fas fa-check-square"></i> Pilih Semua';
+        updateDeleteButton();
+        
+        // Reload jika tidak ada item lagi
+        setTimeout(() => {
+            if (document.querySelectorAll('.history-item').length === 0) {
+                location.reload();
+            }
+        }, 500);
+        
+        // Show success message
+        showNotification(data.message, 'success');
+        
+    } catch (error) {
+        alert('Error: ' + error.message);
+        console.error('Error:', error);
+    }
+}
+
+// Show notification
+function showNotification(message, type) {
+    const notification = document.createElement('div');
+    notification.className = `alert alert-${type}`;
+    notification.innerHTML = `
+        <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'}"></i>
+        ${message}
+        <button class="close-btn" onclick="this.parentElement.remove()">&times;</button>
+    `;
+    
+    const container = document.querySelector('.container');
+    const firstChild = container.firstElementChild;
+    if (firstChild) {
+        container.insertBefore(notification, firstChild);
+    } else {
+        container.appendChild(notification);
+    }
+    
+    setTimeout(() => {
+        notification.style.opacity = '0';
+        setTimeout(() => notification.remove(), 300);
+    }, 3000);
+}
+</script>
+{% endblock %}
+

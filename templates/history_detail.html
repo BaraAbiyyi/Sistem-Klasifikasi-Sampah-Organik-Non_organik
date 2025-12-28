@@ -1,0 +1,499 @@
+{% extends "base.html" %}
+
+{% block title %}Detail History - Deteksi Sampah{% endblock %}
+
+{% block content %}
+<div class="history-detail-page">
+    <div class="detail-page-header">
+        <a href="{{ url_for('history') }}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Kembali ke History
+        </a>
+        <h1><i class="fas fa-info-circle"></i> Detail History Deteksi</h1>
+    </div>
+
+    <div class="detail-content-wrapper">
+        <!-- Header Section -->
+        <div class="detail-header-section">
+            <div class="detail-icon-large {{ 'organic' if detection.predicted_class == 'Organik' else 'non-organic' }}">
+                <i class="fas fa-{{ 'leaf' if detection.predicted_class == 'Organik' else 'recycle' }}"></i>
+            </div>
+            <div class="detail-title-section">
+                <h2>{{ detection.predicted_class }}</h2>
+                <p class="detail-date-full">
+                    <i class="fas fa-calendar"></i> 
+                    {{ detection.created_at.strftime('%A, %d %B %Y') }}
+                    <span style="margin: 0 0.5rem;">•</span>
+                    <i class="fas fa-clock"></i> 
+                    {{ detection.created_at.strftime('%H:%M:%S') }}
+                </p>
+            </div>
+        </div>
+
+        <!-- Stats Cards -->
+        <div class="detail-stats-section">
+            <div class="detail-stat-card primary">
+                <div class="stat-icon">
+                    <i class="fas fa-percentage"></i>
+                </div>
+                <div class="stat-content">
+                    <h3>{{ detection.confidence }}%</h3>
+                    <p>Confidence Score</p>
+                </div>
+            </div>
+            
+            {% if detection.processing_time %}
+            <div class="detail-stat-card info">
+                <div class="stat-icon">
+                    <i class="fas fa-stopwatch"></i>
+                </div>
+                <div class="stat-content">
+                    <h3>{{ detection.processing_time }}s</h3>
+                    <p>Processing Time</p>
+                </div>
+            </div>
+            {% endif %}
+            
+            {% if detection.image_size %}
+            <div class="detail-stat-card success">
+                <div class="stat-icon">
+                    <i class="fas fa-image"></i>
+                </div>
+                <div class="stat-content">
+                    <h3>{{ detection.image_size }}</h3>
+                    <p>Resolution</p>
+                </div>
+            </div>
+            {% endif %}
+            
+            <div class="detail-stat-card warning">
+                <div class="stat-icon">
+                    <i class="fas fa-hashtag"></i>
+                </div>
+                <div class="stat-content">
+                    <h3>#{{ detection.id }}</h3>
+                    <p>Detection ID</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Media Section -->
+        {% if detection.image_path %}
+        <div class="detail-media-section">
+            <h3>
+                <i class="fas fa-{{ 'video' if is_video else 'image' }}"></i> 
+                {{ 'Video' if is_video else 'Gambar' }} Hasil Deteksi
+            </h3>
+            <div class="media-container">
+                {% if is_video %}
+                <video src="{{ url_for('serve_video', filename=detection.image_path) }}" 
+                       controls 
+                       class="detail-media-video">
+                    Browser Anda tidak mendukung video tag.
+                </video>
+                {% else %}
+                <img src="{{ url_for('static', filename='uploads/' + detection.image_path) }}" 
+                     alt="Detection Result" 
+                     class="detail-media-image"
+                     onclick="showImageModal(this.src)">
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Information Section -->
+        <div class="detail-info-section">
+            <h3><i class="fas fa-info-circle"></i> Informasi Detail</h3>
+            <div class="info-grid">
+                <div class="info-item">
+                    <span class="info-label">
+                        <i class="fas fa-tag"></i> Kelas Prediksi:
+                    </span>
+                    <span class="info-value class-{{ 'organic' if detection.predicted_class == 'Organik' else 'non-organic' }}">
+                        {{ detection.predicted_class }}
+                    </span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">
+                        <i class="fas fa-percentage"></i> Confidence:
+                    </span>
+                    <span class="info-value">{{ detection.confidence }}%</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">
+                        <i class="fas fa-user"></i> User:
+                    </span>
+                    <span class="info-value">{{ detection.user.username }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">
+                        <i class="fas fa-file"></i> Tipe File:
+                    </span>
+                    <span class="info-value">{{ 'Video' if is_video else 'Gambar' }}</span>
+                </div>
+                {% if detection.image_size %}
+                <div class="info-item">
+                    <span class="info-label">
+                        <i class="fas fa-expand"></i> Ukuran:
+                    </span>
+                    <span class="info-value">{{ detection.image_size }}</span>
+                </div>
+                {% endif %}
+                {% if detection.processing_time %}
+                <div class="info-item">
+                    <span class="info-label">
+                        <i class="fas fa-clock"></i> Waktu Processing:
+                    </span>
+                    <span class="info-value">{{ detection.processing_time }} detik</span>
+                </div>
+                {% endif %}
+                <div class="info-item">
+                    <span class="info-label">
+                        <i class="fas fa-calendar-alt"></i> Tanggal Deteksi:
+                    </span>
+                    <span class="info-value">{{ detection.created_at.strftime('%d %B %Y, %H:%M:%S') }}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Actions Section -->
+        <div class="detail-actions-section">
+            <a href="{{ url_for('history') }}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Kembali
+            </a>
+            {% if detection.image_path %}
+            <a href="{{ url_for('static', filename='uploads/' + detection.image_path) if not is_video else url_for('serve_video', filename=detection.image_path) }}" 
+               class="btn btn-primary" 
+               download>
+                <i class="fas fa-download"></i> Download {{ 'Video' if is_video else 'Gambar' }}
+            </a>
+            {% endif %}
+            <button class="btn btn-danger" onclick="deleteHistory({{ detection.id }})">
+                <i class="fas fa-trash"></i> Hapus History
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Image Modal -->
+<div id="imageModal" class="modal" onclick="closeImageModal()">
+    <span class="modal-close">&times;</span>
+    <img class="modal-content" id="modalImage">
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.history-detail-page {
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+.detail-page-header {
+    margin-bottom: 2rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.detail-page-header h1 {
+    margin: 0;
+    color: var(--text-primary);
+    flex: 1;
+}
+
+.detail-content-wrapper {
+    background: var(--surface-card);
+    border-radius: 20px;
+    padding: 2.5rem;
+    box-shadow: 0 5px 20px var(--shadow);
+    border: 1px solid var(--border-subtle);
+}
+
+.detail-header-section {
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+    margin-bottom: 2.5rem;
+    padding-bottom: 2rem;
+    border-bottom: 2px solid var(--border-subtle);
+}
+
+.detail-icon-large {
+    width: 100px;
+    height: 100px;
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 3.5rem;
+    color: white;
+    flex-shrink: 0;
+}
+
+.detail-icon-large.organic {
+    background: linear-gradient(135deg, var(--secondary-main) 0%, var(--secondary-dark) 100%);
+}
+
+.detail-icon-large.non-organic {
+    background: linear-gradient(135deg, var(--accent-orange) 0%, #E65100 100%);
+}
+
+.detail-title-section h2 {
+    margin: 0 0 0.5rem 0;
+    color: var(--text-primary);
+    font-size: 2.5rem;
+}
+
+.detail-date-full {
+    margin: 0;
+    color: var(--text-secondary);
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.detail-stats-section {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2.5rem;
+}
+
+.detail-stat-card {
+    background: var(--bg-main);
+    padding: 1.5rem;
+    border-radius: 15px;
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+    border: 2px solid var(--border-subtle);
+    transition: transform 0.3s;
+}
+
+.detail-stat-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 5px 15px var(--shadow);
+}
+
+.detail-stat-card .stat-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.8rem;
+    color: white;
+}
+
+.detail-stat-card.primary .stat-icon {
+    background: linear-gradient(135deg, var(--primary-main) 0%, var(--primary-dark) 100%);
+}
+
+.detail-stat-card.info .stat-icon {
+    background: linear-gradient(135deg, var(--accent-blue) 0%, #0D47A1 100%);
+}
+
+.detail-stat-card.success .stat-icon {
+    background: linear-gradient(135deg, var(--secondary-main) 0%, var(--secondary-dark) 100%);
+}
+
+.detail-stat-card.warning .stat-icon {
+    background: linear-gradient(135deg, var(--accent-orange) 0%, #E65100 100%);
+}
+
+.detail-stat-card h3 {
+    margin: 0 0 0.25rem 0;
+    color: var(--text-primary);
+    font-size: 2rem;
+    line-height: 1;
+}
+
+.detail-stat-card p {
+    margin: 0;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+.detail-media-section {
+    margin: 2.5rem 0;
+    padding: 2rem;
+    background: var(--bg-main);
+    border-radius: 15px;
+    border: 1px solid var(--border-subtle);
+}
+
+.detail-media-section h3 {
+    margin: 0 0 1.5rem 0;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 1.3rem;
+}
+
+.media-container {
+    text-align: center;
+}
+
+.detail-media-video,
+.detail-media-image {
+    width: 100%;
+    max-width: 100%;
+    border-radius: 15px;
+    box-shadow: 0 5px 20px var(--shadow);
+}
+
+.detail-media-image {
+    cursor: pointer;
+    transition: transform 0.3s;
+}
+
+.detail-media-image:hover {
+    transform: scale(1.02);
+}
+
+.detail-info-section {
+    margin: 2.5rem 0;
+    padding: 2rem;
+    background: var(--bg-main);
+    border-radius: 15px;
+    border: 1px solid var(--border-subtle);
+}
+
+.detail-info-section h3 {
+    margin: 0 0 1.5rem 0;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 1.3rem;
+}
+
+.info-grid {
+    display: grid;
+    gap: 1rem;
+}
+
+.info-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 1.25rem;
+    background: var(--surface-card);
+    border-radius: 10px;
+    border-left: 4px solid var(--primary-main);
+}
+
+.info-label {
+    color: var(--text-secondary);
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.info-value {
+    color: var(--text-primary);
+    font-weight: 600;
+    font-size: 1.05rem;
+}
+
+.info-value.class-organic {
+    color: var(--secondary-main);
+}
+
+.info-value.class-non-organic {
+    color: var(--accent-orange);
+}
+
+.detail-actions-section {
+    margin-top: 2.5rem;
+    padding-top: 2rem;
+    border-top: 2px solid var(--border-subtle);
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+@media (max-width: 768px) {
+    .detail-content-wrapper {
+        padding: 1.5rem;
+    }
+    
+    .detail-header-section {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .detail-title-section h2 {
+        font-size: 2rem;
+    }
+    
+    .detail-stats-section {
+        grid-template-columns: 1fr;
+    }
+    
+    .detail-media-section,
+    .detail-info-section {
+        padding: 1.5rem;
+    }
+    
+    .detail-actions-section {
+        flex-direction: column;
+    }
+    
+    .detail-actions-section .btn {
+        width: 100%;
+    }
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function showImageModal(src) {
+    const modal = document.getElementById('imageModal');
+    const modalImg = document.getElementById('modalImage');
+    modal.style.display = 'block';
+    modalImg.src = src;
+}
+
+function closeImageModal() {
+    document.getElementById('imageModal').style.display = 'none';
+}
+
+// Delete history
+async function deleteHistory(detectionId) {
+    if (!confirm('Apakah Anda yakin ingin menghapus history ini?')) {
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/history/delete/${detectionId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        const data = await response.json();
+        
+        if (data.error) {
+            alert('Error: ' + data.error);
+            return;
+        }
+        
+        // Redirect ke history setelah berhasil
+        window.location.href = '/history';
+        
+    } catch (error) {
+        alert('Error: ' + error.message);
+        console.error('Error:', error);
+    }
+}
+</script>
+{% endblock %}
+

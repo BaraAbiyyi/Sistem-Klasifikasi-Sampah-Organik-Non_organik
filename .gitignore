@@ -1,0 +1,49 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.venv/
+venv/
+ENV/
+
+# Jupyter checkpoints
+.ipynb_checkpoints/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Database
+instance/
+*.db
+
+# Uploads (user uploaded files)
+static/uploads/*
+!static/uploads/.gitkeep
+
+# Dataset (terlalu besar, tidak perlu di-upload)
+notebook/dataset_sampah/
+notebook/.ipynb_checkpoints/
+
+# Model duplikat (simpan hanya waste_classification_model.h5)
+best_model.h5
+notebook/best_model.h5
+
+# Crash dumps
+*.stackdump
+bash.exe.stackdump
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Environment
+.env
+.env.local

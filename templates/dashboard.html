@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Deteksi Sampah{% endblock %}
+
+{% block content %}
+<div class="dashboard-header">
+    <h1><i class="fas fa-home"></i> Dashboard</h1>
+    <p>Selamat datang, {{ user.full_name or user.username }}!</p>
+</div>
+
+<div class="stats-grid">
+    <div class="stat-card stat-primary">
+        <div class="stat-icon">
+            <i class="fas fa-camera"></i>
+        </div>
+        <div class="stat-content">
+            <h3>{{ total_detections }}</h3>
+            <p>Total Deteksi</p>
+        </div>
+    </div>
+
+    <div class="stat-card stat-success">
+        <div class="stat-icon">
+            <i class="fas fa-leaf"></i>
+        </div>
+        <div class="stat-content">
+            <h3>{{ user_organic }}</h3>
+            <p>Sampah Organik</p>
+        </div>
+    </div>
+
+    <div class="stat-card stat-warning">
+        <div class="stat-icon">
+            <i class="fas fa-recycle"></i>
+        </div>
+        <div class="stat-content">
+            <h3>{{ user_non_organic }}</h3>
+            <p>Sampah Non-Organik</p>
+        </div>
+    </div>
+
+    <div class="stat-card stat-info">
+        <div class="stat-icon">
+            <i class="fas fa-percentage"></i>
+        </div>
+        <div class="stat-content">
+            <h3>{% if total_detections > 0 %}{{ ((user_organic / total_detections) * 100)|round(1) }}{% else %}0{% endif %}%</h3>
+            <p>Rasio Organik</p>
+        </div>
+    </div>
+</div>
+
+{% if system_stats %}
+<div class="admin-stats">
+    <h2><i class="fas fa-chart-bar"></i> Statistik Sistem</h2>
+    <div class="stats-grid">
+        <div class="stat-card">
+            <h3>{{ system_stats.total_detections }}</h3>
+            <p>Total Deteksi Sistem</p>
+        </div>
+        <div class="stat-card">
+            <h3>{{ system_stats.total_users }}</h3>
+            <p>Total Pengguna</p>
+        </div>
+        <div class="stat-card">
+            <h3>{{ system_stats.total_organic }}</h3>
+            <p>Total Organik</p>
+        </div>
+        <div class="stat-card">
+            <h3>{{ system_stats.total_non_organic }}</h3>
+            <p>Total Non-Organik</p>
+        </div>
+    </div>
+    {% if user.is_admin %}
+    <div style="margin-top: 1.5rem;">
+        <a href="{{ url_for('admin_dashboard') }}" class="btn btn-primary">
+            <i class="fas fa-shield-alt"></i> Buka Admin Panel
+        </a>
+    </div>
+    {% endif %}
+</div>
+{% endif %}
+
+<div class="dashboard-actions">
+    <a href="{{ url_for('detect') }}" class="btn btn-primary btn-large">
+        <i class="fas fa-camera"></i> Mulai Deteksi
+    </a>
+    <a href="{{ url_for('history') }}" class="btn btn-secondary btn-large">
+        <i class="fas fa-history"></i> Lihat History
+    </a>
+</div>
+
+<div class="recent-section">
+    <h2><i class="fas fa-clock"></i> Deteksi Terbaru</h2>
+    {% if recent_detections %}
+    <div class="detection-list">
+        {% for detection in recent_detections %}
+        <div class="detection-item">
+            <div class="detection-icon">
+                {% if detection.predicted_class == 'Organik' %}
+                    <i class="fas fa-leaf"></i>
+                {% else %}
+                    <i class="fas fa-recycle"></i>
+                {% endif %}
+            </div>
+            <div class="detection-info">
+                <h4>{{ detection.predicted_class }}</h4>
+                <p>Confidence: {{ detection.confidence }}%</p>
+                <small>{{ detection.created_at.strftime('%d %B %Y, %H:%M') }}</small>
+            </div>
+            <div class="detection-confidence">
+                <div class="confidence-badge confidence-{{ 'success' if detection.predicted_class == 'Organik' else 'warning' }}">
+                    {{ detection.confidence }}%
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <i class="fas fa-inbox"></i>
+        <p>Belum ada deteksi. Mulai deteksi pertama Anda!</p>
+        <a href="{{ url_for('detect') }}" class="btn btn-primary">Mulai Deteksi</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
