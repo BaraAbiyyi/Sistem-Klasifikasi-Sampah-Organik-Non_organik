@@ -73,6 +73,9 @@ Atau double click `run.bat` (Windows)
 
 ### 4. Akses Aplikasi
 - Buka browser: `http://localhost:5000`
+- **Default Guest Account:**
+  - Username: `guest`
+  - Password: `guest123`
 - **Default Admin Account:**
   - Username: `admin`
   - Password: `admin123`
