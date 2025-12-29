@@ -69,7 +69,6 @@ python app.py
 python3 app.py
 ```
 
-Atau double click `run.bat` (Windows)
 
 ### 4. Akses Aplikasi
 - Buka browser: `http://localhost:5000`
@@ -89,8 +88,6 @@ deteksi_sampah_deploy/
 ├── models.py              # Database models
 ├── requirements.txt       # Dependencies
 ├── README.md             # Dokumentasi
-├── run.bat               # Script untuk Windows
-├── run.sh                # Script untuk Linux/Mac
 ├── waste_detection.db    # SQLite database (auto-generated)
 ├── templates/
 │   ├── base.html         # Base template
