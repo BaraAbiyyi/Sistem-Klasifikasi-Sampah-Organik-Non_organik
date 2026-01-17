@@ -69,12 +69,10 @@ python app.py
 python3 app.py
 ```
 
+Atau double click `run.bat` (Windows)
 
 ### 4. Akses Aplikasi
 - Buka browser: `http://localhost:5000`
-- **Default Guest Account:**
-  - Username: `guest`
-  - Password: `guest123`
 - **Default Admin Account:**
   - Username: `admin`
   - Password: `admin123`
@@ -88,6 +86,8 @@ deteksi_sampah_deploy/
 ├── models.py              # Database models
 ├── requirements.txt       # Dependencies
 ├── README.md             # Dokumentasi
+├── run.bat               # Script untuk Windows
+├── run.sh                # Script untuk Linux/Mac
 ├── waste_detection.db    # SQLite database (auto-generated)
 ├── templates/
 │   ├── base.html         # Base template
@@ -99,7 +99,7 @@ deteksi_sampah_deploy/
 │   └── profile.html      # Profile user
 ├── static/
 │   ├── css/
-│   │   └── style.css     # Styling (tema golden brown)
+│   │   └── style.css     # Styling (CalmGreen)
 │   ├── js/
 │   │   ├── main.js       # JavaScript umum
 │   │   └── detect.js     # JavaScript deteksi
@@ -135,7 +135,7 @@ History & Statistik
 
 ## 🎨 Tema & Design
 
-- **Tema:** Mad Green Professional
+- **Tema:** ClamGreen Professional
 - **Responsive Design** - Mobile-friendly
 - **Modern UI/UX** - Animasi dan transisi smooth
 - **Font Awesome Icons** - Icons profesional
