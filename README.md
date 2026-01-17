@@ -135,7 +135,7 @@ History & Statistik
 
 ## 🎨 Tema & Design
 
-- **Tema:** Golden Brown Professional
+- **Tema:** Mad Green Professional
 - **Responsive Design** - Mobile-friendly
 - **Modern UI/UX** - Animasi dan transisi smooth
 - **Font Awesome Icons** - Icons profesional
