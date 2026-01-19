@@ -104,7 +104,6 @@ deteksi_sampah_deploy/
 │   ├── css/
 │   │   └── style.css       # Styling
 │   │   └── style.css     # Styling (CalmGreen)
-│   │   └── style.css     # Styling (CalmGreen)
 │   ├── js/
 │   │   ├── main.js       # JavaScript umum
 │   │   └── detect.js     # JavaScript deteksi
