@@ -355,12 +355,13 @@ def login_required(f):
 
 # ==================== ROUTES ====================
 
+
 @app.route('/')
 def index():
-    """Halaman utama - redirect ke login atau dashboard"""
+    """Halaman utama - tampilkan landing page jika belum login, jika sudah login ke dashboard"""
     if 'user_id' in session:
         return redirect(url_for('dashboard'))
-    return redirect(url_for('login'))
+    return render_template('landing.html')
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
