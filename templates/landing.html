@@ -1,0 +1,976 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tcan - Sistem Deteksi Sampah Berbasis AI</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --primary-green: #2d7a4a;
+      --bg-cream: #f5f0eb;
+      --white: #ffffff;
+      --dark: #1a1a1a;
+      --gray: #666666;
+      --light-gray: #e5e5e5;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      color: var(--dark);
+      line-height: 1.6;
+      background-color: var(--bg-cream);
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 2rem;
+    }
+
+    /* ========== HEADER & NAVIGATION ========== */
+    header {
+      background: transparent;
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      padding: 1.5rem 0;
+      transition: box-shadow 0.3s, background 0.3s;
+    }
+
+    header.scrolled {
+      box-shadow: none;
+      background: transparent;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .logo {
+      font-family: 'Poppins', sans-serif;
+      font-size: 1.3rem;
+      font-weight: 600;
+      color: var(--primary-green);
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+
+    .logo i {
+      font-size: 1.5rem;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 2.5rem;
+      list-style: none;
+    }
+
+    .nav-links a {
+      color: var(--dark);
+      text-decoration: none;
+      font-weight: 400;
+      transition: color 0.3s ease;
+      font-size: 0.9rem;
+    }
+
+    .nav-links a:hover {
+      color: var(--primary-green);
+    }
+
+    .nav-actions {
+      display: flex;
+      gap: 1.5rem;
+      align-items: center;
+    }
+
+    .nav-actions a {
+      color: var(--gray);
+      font-size: 1.1rem;
+      text-decoration: none;
+      transition: color 0.3s ease;
+    }
+
+    .nav-actions a:hover {
+      color: var(--primary-green);
+    }
+
+    .profile-icon {
+      width: 36px;
+      height: 36px;
+      background: #fff;
+      color: var(--primary-green);
+      border: 2px solid var(--primary-green);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 0.9rem;
+      transition: background 0.2s, color 0.2s;
+    }
+
+    /* HERO SECTION */
+    .hero {
+      padding: 4rem 0 2rem;
+      background: var(--bg-cream);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero .container {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 4rem;
+      align-items: center;
+      position: relative;
+      z-index: 2;
+    }
+
+    .hero-content h1 {
+      font-family: 'Poppins', sans-serif;
+      font-size: 3.2rem;
+      font-weight: 600;
+      line-height: 1.2;
+      margin-bottom: 1.5rem;
+      color: var(--dark);
+    }
+
+    .hero-content p {
+      font-size: 1rem;
+      color: var(--gray);
+      line-height: 1.7;
+      margin-bottom: 2rem;
+      font-weight: 300;
+    }
+
+    .hero-buttons {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .btn-primary {
+      padding: 0.85rem 2rem;
+      background: var(--primary-green);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-weight: 500;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .btn-primary:hover {
+      background: #1f5838;
+      transform: translateY(-2px);
+    }
+
+    .btn-secondary {
+      padding: 0.85rem 2rem;
+      background: transparent;
+      color: var(--dark);
+      border: 1px solid var(--dark);
+      border-radius: 6px;
+      font-weight: 500;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-decoration: none;
+    }
+
+    .btn-secondary:hover {
+      background: var(--dark);
+      color: white;
+    }
+
+    .trial-text {
+      font-size: 0.85rem;
+      color: var(--gray);
+      font-weight: 300;
+    }
+
+    .social-links {
+      display: flex;
+      gap: 1rem;
+      margin-top: 2.5rem;
+    }
+
+    .social-links a {
+      color: var(--dark);
+      font-size: 1rem;
+      text-decoration: none;
+      transition: color 0.3s ease;
+    }
+
+    .social-links a:hover {
+      color: var(--primary-green);
+    }
+
+    .hero-image {
+      position: relative;
+      height: 500px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .hero-image img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      filter: drop-shadow(0 10px 30px rgba(0, 0, 0, 0.08));
+    }
+
+    .floating-label {
+      position: absolute;
+      background: white;
+      padding: 0.5rem 1rem;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 500;
+      color: var(--gray);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+      z-index: 3;
+    }
+
+    .label-1 {
+      top: 15%;
+      right: 10%;
+      animation: float 3s ease-in-out infinite;
+    }
+
+    .label-2 {
+      top: 40%;
+      right: 5%;
+      animation: float 4s ease-in-out infinite 0.5s;
+    }
+
+    .label-3 {
+      bottom: 25%;
+      right: 8%;
+      animation: float 3.5s ease-in-out infinite 1s;
+    }
+
+    .label-4 {
+      bottom: 10%;
+      right: 20%;
+      animation: float 4s ease-in-out infinite 1.5s;
+    }
+
+    @keyframes float {
+
+      0%,
+      100% {
+        transform: translateY(0px);
+      }
+
+      50% {
+        transform: translateY(-10px);
+      }
+    }
+
+    /* ========== FEATURES SECTION ========== */
+    .features {
+      padding: 6rem 0;
+      background: var(--white);
+    }
+
+    .features .section-title {
+      font-family: 'Poppins', sans-serif;
+      font-size: 2rem;
+      font-weight: 600;
+      text-align: center;
+      margin-bottom: 3rem;
+      color: var(--dark);
+    }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 3rem;
+    }
+
+    .feature-card {
+      padding: 2rem;
+      background: transparent;
+      border-top: 2px solid var(--primary-green);
+    }
+
+    .feature-icon {
+      font-size: 2rem;
+      color: var(--primary-green);
+      margin-bottom: 1rem;
+    }
+
+    .feature-card h3 {
+      font-family: 'Poppins', sans-serif;
+      font-size: 1.1rem;
+      font-weight: 500;
+      margin-bottom: 0.7rem;
+      color: var(--dark);
+    }
+
+    .feature-card p {
+      color: var(--gray);
+      font-size: 0.9rem;
+      line-height: 1.6;
+      font-weight: 300;
+    }
+
+    /* ========== TECHNOLOGY SECTION ========== */
+    .technology {
+      padding: 6rem 0;
+      background: var(--bg-cream);
+    }
+
+    .tech-content {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 4rem;
+      align-items: center;
+    }
+
+    .tech-info h2 {
+      font-family: 'Poppins', sans-serif;
+      font-size: 2rem;
+      font-weight: 600;
+      margin-bottom: 1.5rem;
+      color: var(--dark);
+    }
+
+    .tech-info p {
+      color: var(--gray);
+      margin-bottom: 1.5rem;
+      line-height: 1.7;
+      font-size: 0.95rem;
+      font-weight: 300;
+    }
+
+    .tech-specs {
+      border-top: 1px solid var(--light-gray);
+      padding-top: 2rem;
+      margin-top: 2rem;
+    }
+
+    .spec-item {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+      padding-bottom: 1.5rem;
+      border-bottom: 1px solid #f0f0f0;
+    }
+
+    .spec-item:last-child {
+      margin-bottom: 0;
+      border-bottom: none;
+      padding-bottom: 0;
+    }
+
+    .spec-icon {
+      font-size: 1.3rem;
+      color: var(--primary-green);
+      flex-shrink: 0;
+    }
+
+    .spec-content h4 {
+      font-family: 'Poppins', sans-serif;
+      color: var(--dark);
+      margin-bottom: 0.3rem;
+      font-size: 0.9rem;
+      font-weight: 500;
+    }
+
+    .spec-content p {
+      margin: 0;
+      font-size: 0.85rem;
+      color: var(--gray);
+      font-weight: 300;
+    }
+
+    .tech-image {
+      height: 400px;
+    }
+
+    .tech-image img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    }
+
+    /* ========== ACCURACY SECTION ========== */
+    .accuracy {
+      padding: 6rem 0;
+      background: var(--primary-green);
+      color: white;
+      position: relative;
+    }
+
+    .accuracy .container {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 4rem;
+      align-items: center;
+    }
+
+    .accuracy-content h2 {
+      font-family: 'Poppins', sans-serif;
+      font-size: 2rem;
+      font-weight: 600;
+      margin-bottom: 1.5rem;
+    }
+
+    .accuracy-content p {
+      font-size: 0.95rem;
+      line-height: 1.7;
+      margin-bottom: 1.5rem;
+      opacity: 0.92;
+      font-weight: 300;
+    }
+
+    .accuracy-stats {
+      display: flex;
+      gap: 2rem;
+      margin-top: 2.5rem;
+    }
+
+    .stat {
+      flex: 1;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 2rem 1.5rem;
+      border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      text-align: center;
+    }
+
+    .stat-number {
+      font-family: 'Poppins', sans-serif;
+      font-size: 2.2rem;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+    }
+
+    .stat-label {
+      font-size: 0.85rem;
+      opacity: 0.88;
+      font-weight: 300;
+    }
+
+    .accuracy-image {
+      height: 380px;
+    }
+
+    .accuracy-image img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    /* ========== HOW TO USE SECTION ========== */
+    .how-to-use {
+      padding: 6rem 0;
+      background: var(--white);
+      border-radius: 18px;
+      box-shadow: 0 4px 24px rgba(45, 122, 74, 0.08), 0 0 0 1.5px #e5e5e5;
+      border: 1.5px solid #e5e5e5;
+      margin: 2rem 0;
+      transition: box-shadow 0.3s, border 0.3s;
+    }
+
+    .steps-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 2.5rem;
+    }
+
+    .step-card {
+      padding: 2rem 1rem;
+      text-align: center;
+    }
+
+    .step-number {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 48px;
+      height: 48px;
+      background: var(--primary-green);
+      color: white;
+      border-radius: 50%;
+      font-family: 'Poppins', sans-serif;
+      font-size: 1.2rem;
+      font-weight: 600;
+      margin-bottom: 1.2rem;
+    }
+
+    .step-card h3 {
+      font-family: 'Poppins', sans-serif;
+      font-size: 1rem;
+      font-weight: 500;
+      color: var(--dark);
+      margin-bottom: 0.8rem;
+    }
+
+    .step-card p {
+      color: var(--gray);
+      font-size: 0.85rem;
+      line-height: 1.6;
+      font-weight: 300;
+    }
+
+    /* ========== CTA SECTION ========== */
+    .cta {
+      background: var(--primary-green);
+      color: white;
+      padding: 4rem 0;
+      text-align: center;
+    }
+
+    .cta h2 {
+      font-family: 'Poppins', sans-serif;
+      font-size: 2rem;
+      font-weight: 600;
+      margin-bottom: 1rem;
+    }
+
+    .cta p {
+      font-size: 0.95rem;
+      margin-bottom: 2.5rem;
+      opacity: 0.92;
+      font-weight: 300;
+    }
+
+    /* ========== FOOTER ========== */
+    footer {
+      background: #f5f5f5;
+      color: var(--dark);
+      padding: 4rem 0 2rem;
+    }
+
+    .footer-content {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 3rem;
+      margin-bottom: 3rem;
+    }
+
+    .footer-section h4 {
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.9rem;
+      font-weight: 600;
+      margin-bottom: 1.2rem;
+      color: var(--dark);
+    }
+
+    .footer-section ul {
+      list-style: none;
+    }
+
+    .footer-section ul li {
+      margin-bottom: 0.7rem;
+    }
+
+    .footer-section a {
+      color: var(--gray);
+      text-decoration: none;
+      transition: color 0.3s ease;
+      font-size: 0.85rem;
+      font-weight: 300;
+    }
+
+    .footer-section a:hover {
+      color: var(--primary-green);
+    }
+
+    .footer-bottom {
+      border-top: 1px solid #ddd;
+      padding-top: 2rem;
+      text-align: center;
+      color: var(--gray);
+      font-size: 0.85rem;
+      font-weight: 300;
+    }
+
+    @media (max-width: 768px) {
+      .hero .container {
+        grid-template-columns: 1fr;
+        gap: 2rem;
+      }
+
+      .hero-content h1 {
+        font-size: 2.2rem;
+      }
+
+      .hero-image {
+        height: 300px;
+      }
+
+      .features-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .tech-content {
+        grid-template-columns: 1fr;
+        gap: 2rem;
+      }
+
+      .accuracy .container {
+        grid-template-columns: 1fr;
+        gap: 2rem;
+      }
+
+      .steps-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .footer-content {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    .fade-in {
+      animation: fadeIn 0.8s ease-out forwards;
+      opacity: 0;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <!-- ========== HEADER ========== -->
+  <header>
+    <div class="container">
+      <nav>
+        <div class="logo">
+          <i class="fas fa-leaf"></i>
+          Tcan
+        </div>
+        <ul class="nav-links">
+          <li><a href="#features">Fitur Utama</a></li>
+          <li><a href="#technology">Teknologi</a></li>
+          <li><a href="#accuracy">Akurasi</a></li>
+          <li><a href="#howto">Cara Penggunaan</a></li>
+        </ul>
+        <div class="nav-actions">
+          <a href="#search"><i class="fas fa-search"></i></a>
+          <a href="{{ url_for('login') }}" class="profile-icon"
+            style="background:#fff; color:var(--primary-green); border:2px solid var(--primary-green); transition:background 0.2s, color 0.2s;">
+            <i class="fas fa-user"></i>
+          </a>
+        </div>
+      </nav>
+    </div>
+  </header>
+  <!-- ========== HERO SECTION ========== -->
+  <section class="hero">
+    <div class="container">
+      <div class="hero-content fade-in">
+        <h1>Deteksi sampah dengan teknologi kecerdasan buatan.</h1>
+        <p>Sistem kami menggunakan MobileNetV2 dengan deep learning dan transfer learning untuk mengidentifikasi
+          berbagai jenis sampah dengan akurasi tinggi, membantu mengoptimalkan proses daur ulang dan pengelolaan
+          limbah.</p>
+        <div class="hero-buttons">
+          <a class="btn-primary" href="{{ url_for('register') }}">Daftar Sekarang</a>
+          <a class="btn-secondary" href="#howto">Pelajari Lebih Lanjut</a>
+        </div>
+        <p class="trial-text">Dapatkan akses gratis selama 30 hari untuk mencoba semua fitur</p>
+        <div class="social-links">
+          <a href="#facebook"><i class="fab fa-facebook"></i></a>
+          <a href="#twitter"><i class="fab fa-twitter"></i></a>
+          <a href="#instagram"><i class="fab fa-instagram"></i></a>
+        </div>
+      </div>
+      <div class="hero-image">
+        <img src="{{ url_for('static', filename='assets/istockphoto-1304551971-612x612-removebg-preview.png') }}"
+          alt="Deteksi Sampah AI">
+        <div class="floating-label label-1">Plastik</div>
+        <div class="floating-label label-2">Organik</div>
+        <div class="floating-label label-3">Logam</div>
+        <div class="floating-label label-4">Kertas</div>
+      </div>
+    </div>
+  </section>
+  <!-- ========== FEATURES SECTION ========== -->
+  <section class="features" id="features">
+    <div class="container">
+      <h2 class="section-title">Fitur Unggulan</h2>
+      <div class="features-grid">
+        <div class="feature-card">
+          <div class="feature-icon"><i class="fas fa-camera"></i></div>
+          <h3>Deteksi Real-Time</h3>
+          <p>Analisis sampah secara instan dengan kamera atau foto yang diunggah langsung ke sistem kami.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon"><i class="fas fa-cubes"></i></div>
+          <h3>Klasifikasi Multi-Kategori</h3>
+          <p>Mengenali lebih dari 8 kategori sampah berbeda dengan presisi tinggi.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon"><i class="fas fa-chart-line"></i></div>
+          <h3>Analitik Mendalam</h3>
+          <p>Dashboard komprehensif untuk melacak dan menganalisis pola sampah dari waktu ke waktu.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon"><i class="fas fa-lock"></i></div>
+          <h3>Keamanan Data</h3>
+          <p>Enkripsi tingkat enterprise untuk melindungi semua data deteksi dan analisis Anda.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon"><i class="fas fa-mobile-alt"></i></div>
+          <h3>Multi-Platform</h3>
+          <p>Akses dari web, mobile, atau aplikasi desktop dengan sinkronisasi seamless.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon"><i class="fas fa-leaf"></i></div>
+          <h3>Dampak Lingkungan</h3>
+          <p>Pantau kontribusi Anda terhadap keberlanjutan dan daur ulang yang lebih baik.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+  <!-- ========== TECHNOLOGY SECTION ========== -->
+  <section class="technology" id="technology">
+    <div class="container">
+      <div class="tech-content">
+        <div class="tech-image fade-in">
+          <img src="https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=600&h=400&fit=crop"
+            alt="Teknologi MobileNetV2">
+        </div>
+        <div class="tech-info">
+          <h2>Teknologi Canggih</h2>
+          <p>Tcan dibangun dengan arsitektur MobileNetV2 yang dioptimalkan untuk efisiensi dan akurasi. Kami
+            menggunakan pendekatan deep learning dan transfer learning untuk memberikan hasil deteksi yang akurat
+            dan responsif.</p>
+          <div class="tech-specs">
+            <div class="spec-item">
+              <div class="spec-icon"><i class="fas fa-brain"></i></div>
+              <div class="spec-content">
+                <h4>Deep Learning Framework</h4>
+                <p>Menggunakan neural network berlapis untuk pembelajaran mendalam tentang karakteristik
+                  sampah.</p>
+              </div>
+            </div>
+            <div class="spec-item">
+              <div class="spec-icon"><i class="fas fa-exchange-alt"></i></div>
+              <div class="spec-content">
+                <h4>Transfer Learning</h4>
+                <p>Model dilatih dengan dataset besar dan disesuaikan untuk spesifikasi lokal sampah
+                  Indonesia.</p>
+              </div>
+            </div>
+            <div class="spec-item">
+              <div class="spec-icon"><i class="fas fa-mobile-alt"></i></div>
+              <div class="spec-content">
+                <h4>MobileNetV2 Architecture</h4>
+                <p>Arsitektur ringan yang memungkinkan inferensi cepat di perangkat mobile tanpa mengorbankan
+                  akurasi.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+  <!-- ========== ACCURACY SECTION ========== -->
+  <section class="accuracy" id="accuracy">
+    <div class="container">
+      <div class="accuracy-content">
+        <h2>Tingkat Akurasi Tinggi</h2>
+        <p>Sistem kami telah diuji dan terbukti mencapai tingkat akurasi 93% dalam mendeteksi dan mengklasifikasi
+          berbagai jenis sampah. Hasil ini melampaui standar industri dan terus ditingkatkan melalui
+          pembelajaran berkelanjutan.</p>
+        <div class="accuracy-stats">
+          <div class="stat">
+            <div class="stat-number">93%</div>
+            <div class="stat-label">Akurasi Deteksi</div>
+          </div>
+          <div class="stat">
+            <div class="stat-number">2</div>
+            <div class="stat-label">Kategori Sampah</div>
+          </div>
+          <div class="stat">
+            <div class="stat-number">&lt;1000ms</div>
+            <div class="stat-label">Waktu Deteksi</div>
+          </div>
+        </div>
+      </div>
+      <div class="accuracy-image fade-in">
+        <img src="https://images.unsplash.com/photo-1552664730-d307ca884978?w=600&h=400&fit=crop" alt="Hasil Deteksi">
+      </div>
+    </div>
+  </section>
+  <!-- ========== HOW TO USE SECTION ========== -->
+  <section class="how-to-use" id="howto">
+    <div class="container">
+      <h2 class="section-title">Cara Penggunaan</h2>
+      <div class="steps-grid">
+        <div class="step-card">
+          <div class="step-number">1</div>
+          <h3>Daftar & Login</h3>
+          <p>Buat akun gratis dan login ke dashboard Tcan dengan email Anda.</p>
+        </div>
+        <div class="step-card">
+          <div class="step-number">2</div>
+          <h3>Unggah Gambar</h3>
+          <p>Ambil foto sampah atau unggah gambar dari galeri perangkat Anda.</p>
+        </div>
+        <div class="step-card">
+          <div class="step-number">3</div>
+          <h3>Dapatkan Hasil</h3>
+          <p>Sistem otomatis menganalisis dan memberikan hasil deteksi dalam hitungan detik.</p>
+        </div>
+        <div class="step-card">
+          <div class="step-number">4</div>
+          <h3>Analisis & Pantau</h3>
+          <p>Lihat riwayat deteksi, analitik, dan dampak lingkungan Anda di dashboard.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+  <!-- ========== CTA SECTION ========== -->
+  <section class="cta">
+    <div class="container">
+      <h2>Siap Memulai Perjalanan Daur Ulang Cerdas?</h2>
+      <p>Bergabunglah dengan ribuan pengguna yang telah mengoptimalkan pengelolaan sampah mereka</p>
+      <a class="btn-primary" href="{{ url_for('register') }}">Daftar Gratis Sekarang</a>
+    </div>
+  </section>
+  <!-- ========== FOOTER ========== -->
+  <footer>
+    <div class="container">
+      <div class="footer-content">
+        <div class="footer-section">
+          <h4>Tentang Kami</h4>
+          <ul>
+            <li><a href="#">Tentang Tcan</a></li>
+            <li><a href="#">Tim Kami</a></li>
+            <li><a href="#">Karir</a></li>
+            <li><a href="#">Blog</a></li>
+          </ul>
+        </div>
+        <div class="footer-section">
+          <h4>Produk</h4>
+          <ul>
+            <li><a href="#features">Fitur</a></li>
+            <li><a href="#">Dokumentasi</a></li>
+            <li><a href="#">API Reference</a></li>
+            <li><a href="#">Status</a></li>
+          </ul>
+        </div>
+        <div class="footer-section">
+          <h4>Dukungan</h4>
+          <ul>
+            <li><a href="#">Pusat Bantuan</a></li>
+            <li><a href="#">Hubungi Kami</a></li>
+            <li><a href="#">FAQ</a></li>
+            <li><a href="#">Laporan Bug</a></li>
+          </ul>
+        </div>
+        <div class="footer-section">
+          <h4>Legal</h4>
+          <ul>
+            <li><a href="#">Kebijakan Privasi</a></li>
+            <li><a href="#">Syarat Layanan</a></li>
+            <li><a href="#">Lisensi</a></li>
+            <li><a href="#">Cookie</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>&copy; 2026 Tcan. Semua hak dilindungi. | Membangun masa depan yang lebih hijau dengan teknologi
+          AI</p>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // Smooth scroll untuk navigation links
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+      anchor.addEventListener('click', function (e) {
+        const href = this.getAttribute('href');
+        if (href !== '#search' && href !== '#facebook' && href !== '#twitter' && href !== '#instagram') {
+          e.preventDefault();
+          const element = document.querySelector(href);
+          if (element) {
+            element.scrollIntoView({ behavior: 'smooth' });
+          }
+        }
+      });
+    });
+
+    // Fade in animation pada scroll
+    const observerOptions = {
+      threshold: 0.1,
+      rootMargin: '0px 0px -100px 0px'
+    };
+
+    const observer = new IntersectionObserver(function (entries) {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('fade-in');
+          observer.unobserve(entry.target);
+        }
+      });
+    }, observerOptions);
+
+    document.querySelectorAll('[class*="fade-in"]').forEach(el => {
+      observer.observe(el);
+    });
+
+    // Navbar hide on scroll
+    let lastScroll = 0;
+    const header = document.querySelector('header');
+    window.addEventListener('scroll', function () {
+      const currentScroll = window.pageYOffset;
+      if (currentScroll > 80) {
+        header.classList.add('scrolled');
+      } else {
+        header.classList.remove('scrolled');
+      }
+      lastScroll = currentScroll;
+    });
+  </script>
+</body>
+
+</html>
