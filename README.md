@@ -4,7 +4,6 @@ Sistem web profesional untuk klasifikasi sampah organik dan non-organik mengguna
 
 Link Dataset : [Kaggle: Dataset Sampah](https://www.kaggle.com/datasets/eldadvikorian/dataset-sampah-organik-dan-anorganik)
 
-Link Demo System : [Youtube: Vidio Tutorial Penggunaan Sistem](https://youtu.be/-T5OWOfXU0c?si=s76Qy62m2af21pbY)
 
 
 ## ✨ Fitur Utama
